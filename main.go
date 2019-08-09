@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
+	env "github.com/joho/godotenv"
 	"log"
 	"net/http"
+	"os"
 )
 
 type (
@@ -15,6 +18,27 @@ type (
 		Email string `json:"email"`
 	}
 )
+
+var db *gorm.DB
+
+func init() {
+	// env
+	err := env.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+	dbUser := os.Getenv("DB_USERNAME")
+	dbPass := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_DATABASE")
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbUri := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", dbUser, dbPass, dbHost, dbPort, dbName)
+	db, err = gorm.Open("mysql", dbUri)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	db.Debug().AutoMigrate(&User{})
+}
 
 func handleRequests() {
 	router := mux.NewRouter()
