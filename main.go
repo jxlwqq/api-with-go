@@ -1,11 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
-	env "github.com/joho/godotenv"
+	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"os"
@@ -23,7 +24,7 @@ var db *gorm.DB
 
 func init() {
 	// env
-	err := env.Load()
+	err := godotenv.Load()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,7 +49,7 @@ func handleRequests() {
 
 	router.HandleFunc("/users", allUsers).Methods("GET")
 	router.HandleFunc("/users/{id}", oneUser).Methods("GET")
-	router.HandleFunc("/users/{id}", newUser).Methods("POST")
+	router.HandleFunc("/users", newUser).Methods("POST")
 	router.HandleFunc("/users/{id}", updateUser).Methods("PUT")
 	router.HandleFunc("/users/{id}", deleteUser).Methods("DELETE")
 
@@ -56,38 +57,45 @@ func handleRequests() {
 }
 
 func allUsers(w http.ResponseWriter, r *http.Request) {
-	_, err := fmt.Fprintf(w, "all users")
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	var users []User
+	db.Find(&users)
+	json.NewEncoder(w).Encode(users)
 }
 
 func oneUser(w http.ResponseWriter, r *http.Request) {
-	_, err := fmt.Fprintf(w, "one user")
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	id := mux.Vars(r)["id"]
+	var user User
+	db.First(&user, id)
+	json.NewEncoder(w).Encode(user)
 }
 
 func newUser(w http.ResponseWriter, r *http.Request) {
-	_, err := fmt.Fprintf(w, "new user")
-	if err != nil {
-		log.Fatal(err.Error())
+	name := r.PostFormValue("name")
+	email := r.PostFormValue("email")
+	user := User{
+		Name:  name,
+		Email: email,
 	}
+	db.Create(&user)
+	fmt.Fprintf(w, "user created successfully")
 }
 
 func updateUser(w http.ResponseWriter, r *http.Request) {
-	_, err := fmt.Fprintf(w, "update user")
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	var user User
+	id := mux.Vars(r)["id"]
+	db.Find(&user, id)
+	email := r.PostFormValue("email")
+	user.Email = email
+	db.Save(&user)
+	fmt.Fprintf(w, "user updated successfully")
 }
 
 func deleteUser(w http.ResponseWriter, r *http.Request) {
-	_, err := fmt.Fprintf(w, "delete user")
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	var user User
+	id := mux.Vars(r)["id"]
+	db.Find(&user, id)
+	db.Delete(&user)
+	fmt.Fprintf(w, "user deleted successfully")
 }
 
 func main() {
