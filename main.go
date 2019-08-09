@@ -59,6 +59,7 @@ func handleRequests() {
 func allUsers(w http.ResponseWriter, r *http.Request) {
 	var users []User
 	db.Find(&users)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(users)
 }
 
@@ -66,6 +67,7 @@ func oneUser(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	var user User
 	db.First(&user, id)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(user)
 }
 
@@ -77,6 +79,7 @@ func newUser(w http.ResponseWriter, r *http.Request) {
 		Email: email,
 	}
 	db.Create(&user)
+	w.WriteHeader(http.StatusCreated)
 	fmt.Fprintf(w, "user created successfully")
 }
 
@@ -87,6 +90,7 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	email := r.PostFormValue("email")
 	user.Email = email
 	db.Save(&user)
+	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "user updated successfully")
 }
 
@@ -95,11 +99,11 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	db.Find(&user, id)
 	db.Delete(&user)
+	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "user deleted successfully")
 }
 
 func main() {
 	fmt.Println("Hello World!")
-
 	handleRequests()
 }
