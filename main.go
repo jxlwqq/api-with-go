@@ -31,6 +31,7 @@ func init() {
 	dbHost := os.Getenv("DB_HOST")
 	dbPort := os.Getenv("DB_PORT")
 	dbUri := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", dbUser, dbPass, dbHost, dbPort, dbName)
+	var err error
 	db, err = gorm.Open("mysql", dbUri)
 	if err != nil {
 		log.Fatal(err.Error())
